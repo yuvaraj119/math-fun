@@ -8,6 +8,8 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+print("Loading Multiplication Quiz...")
+
 st.session_state["current_page"] = "multiplication"
 
 SCORES_FILE = Path("best_scores.json")

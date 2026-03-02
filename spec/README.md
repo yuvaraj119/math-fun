@@ -323,7 +323,7 @@ Lines: 3,500+
 
 ### Location
 ```
-/Users/yuvarajyadav/IdeaProjects/math-game-quiz/spec/
+/math-game-quiz/spec/
 ```
 
 ### Files

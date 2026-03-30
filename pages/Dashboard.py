@@ -23,7 +23,7 @@ st.title("📊 Dashboard — Session History")
 
 sessions = load_sessions()
 if not sessions:
-    st.info("No sessions yet. Play the Multiplication quiz to create session history.")
+    st.info("No sessions yet. Play the Multiplication or Addition quiz to create session history.")
     st.stop()
 
 df = pd.DataFrame(sessions)

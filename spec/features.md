@@ -116,15 +116,40 @@ Follow the FEATURE_DEVELOPMENT_FLOW (Features → Requirements → Design → Ar
 ## Planned Features (Future Releases)
 
 ### 3. Addition Quiz Game (F-003)
-- Single-digit and double-digit addition
-- Variable difficulty levels (Beginner: 1-10, Intermediate: 1-50, Advanced: 1-100)
-- Timed questions with configurable timer
-- Score and accuracy tracking (session-only)
-
+**User Story**:
+- **Who**: Student (Age 5-10)
+- **What**: Interactive timed addition quiz with configurable number range and session scoring.
+- **Why**: To build confidence and fluency with foundational addition facts before moving into more complex arithmetic.
+**Success Criteria**:
+- Student can complete an addition session using any difficulty range without configuration errors.
+- Student receives immediate correctness feedback for every submitted or timed-out question.
+- Session results are stored alongside existing quiz history so the Dashboard can compare addition performance over time.
+- The feature reuses the current quiz flow closely enough that students can switch between multiplication and addition without relearning the interface.
+**Features**:
+- **Customizable Settings**:
+  - Three difficulty levels based on operand range: Beginner (1-10), Intermediate (1-50), Advanced (1-100)
+  - Configurable total questions from 1 to 500
+  - Adjustable timer per question from 2 to 60 seconds
+  - One-click start and restart flow consistent with the multiplication page
+- **Quiz Mechanics**:
+  - Random addition question generation within the selected range
+  - Timed countdown with automatic advance on timeout
+  - Real-time score tracking and question progress display
+  - Immediate feedback for correct, incorrect, invalid, and timed-out answers
+- **Progress Tracking**:
+  - Session-level score, accuracy, and speed metrics
+  - Local persistence to `sessions.json` using the shared analytics format where possible
+  - Dashboard compatibility so addition sessions appear in operation filters and trend charts
+- **Learning Outcomes**:
+  - Recognition of basic addition facts
+  - Improved speed with single-digit and double-digit mental addition
+  - Confidence progressing from small-number sums to larger ranges
 **Operational Considerations**:
-- Operational Impact: Low. No external services required. Add tests for question generation (T-101) and ensure Requirements.md includes EARS acceptance criteria.
-- Tasks: Create T-100 (Implementation) and T-101 (Question gen), plus T-500 tests.
-
+- Operational Impact: Low. The feature stays fully local and reuses existing JSON persistence patterns, with no external services or credentials required.
+- Availability: Requires the same local file write access used by the multiplication quiz for `sessions.json`.
+- Security: No new personal data is introduced; if the app is ever exposed beyond local use, retain the current privacy-first posture and protect writable JSON files from tampering.
+- Testability: Add focused coverage for addition question generation, answer validation, timeout flow, and session row compatibility with Dashboard analytics.
+- Tasks: Use existing planned tasks `T-100`, `T-101`, `T-102`, and `T-103` for implementation, UI, question generation, and analytics alignment. Ensure matching tests remain tracked in `spec/Testing.md`.
 ### 4. Subtraction Quiz Game (F-004)
 - Single and double-digit subtraction
 - Prevents negative results (age-appropriate)
@@ -208,7 +233,7 @@ When adding a new feature (e.g., Addition Quiz), start with a clear User Story, 
 - Add to Feature Master Table.
 - Draft Requirements.md entry using EARS (WHEN ... THE SYSTEM SHALL).
 - Create Task IDs in `spec/Tasks.md` for implementation (T-1xx) and tests (T-5xx); note any operational documentation needs in Tasks.md.
-- After Requirements.md is approved, proceed to Design.md and follow the 9-step SDD flow. Ensure Release.md is updated appropriately during finalization.
+- After Requirements.md is approved, proceed to Design.md and follow the 10-step SDD flow. Ensure Release.md is updated appropriately during finalization.
 
 ---
 
@@ -235,10 +260,11 @@ After completing Features.md, proceed to **Requirements.md** to define acceptanc
 3. → Design.md - Architect the solution
 4. → Architecture.md - Update system diagrams
 5. → Tasks.md - Break into development tasks
-6. → Implementations.md - Add code examples
-7. → Testing.md - Define test strategy
-8. → README.md - Update documentation
-9. → Release.md - Tag and publish
+6. → Implementations.md - Prepare implementation details
+7. → Coding.md - Implement approved source changes and record them
+8. → Testing.md - Define test strategy
+9. → README.md - Update documentation
+10. → Release.md - Tag and publish
 
 ---
 
@@ -288,4 +314,3 @@ graph TD
 - Consistent daily practice habit
 - Error reduction on challenging number pairs
 - Improved recall of basic arithmetic facts
-

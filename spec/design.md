@@ -337,19 +337,145 @@ Fallback: "Not enough data..." messages if <2 sessions
 ---
 
 ### 4. Addition Quiz Page (`pages/Addition.py`)
-**Purpose**: Interactive timed addition quiz
-
-**Key State Variables**:
-- `st.session_state.min_num`: int
-- `st.session_state.max_num`: int
-- `st.session_state.current_q`: tuple[int, int]
-
+**Purpose**: Interactive timed addition quiz that reuses the existing quiz flow while adapting question generation and analytics for addition practice.
+**Structure**:
+```python
+SESSIONS_FILE = Path("sessions.json")
+ADDITION_LEVELS = {
+    "Beginner (1-10)": (1, 10),
+    "Intermediate (1-50)": (1, 50),
+    "Advanced (1-100)": (1, 100),
+}
+```
+**Design Notes**:
+- Addition does not need per-mode daily best tracking unless explicitly added later.
+- Level labels should remain human-readable and align with `Requirements.md` wording.
+- Persisted metadata should include both level name and numeric bounds so the Dashboard can show meaningful filters later.
 **Functions**:
-- `generate_addition_questions(min_num, max_num, total_q)`
-- `validate_addition_answer(answer_text, num1, num2)`
-
+- `_safe_load_json(path, default)` - Shared safe JSON reader pattern
+- `_safe_save_json(path, data)` - Shared UTF-8 JSON writer pattern
+- `load_sessions()` - Reuse session history loader from the multiplication design
+- `append_session(session_row)` - Append addition session rows using the same storage contract
+**Purpose**: Keep Addition session persistence compatible with Dashboard tables, filters, and trend calculations.
+**Functions**:
+- `make_addition_mode_key(level_name, min_num, max_num, total_q, seconds_per_q)` - Stable identifier for an Addition mode if future best-score tracking is introduced
+- `settings_fingerprint(level_name, min_num, max_num, total_q, seconds_per_q)` - Detect changed settings after a completed quiz
+**Purpose**: Preserve the same predictable state-reset rules already used in multiplication.
+```mermaid
+sequenceDiagram
+    participant User
+    participant Streamlit
+    participant State
+    participant FileSystem
+    User->>Streamlit: Choose level, question count, timer
+    User->>Streamlit: Click Start
+    Streamlit->>State: Reset prior finished state
+    Streamlit->>State: Generate addition question order
+    Streamlit-->>User: Show first question
+    loop Every Question
+        alt Answer submitted
+            User->>Streamlit: Submit answer
+            Streamlit->>State: Validate answer and update history
+        else Timer expires
+            Streamlit->>State: Record TIMEOUT entry
+        end
+        Streamlit->>State: Advance question index
+        Streamlit-->>User: Show next question or results
+    end
+    Streamlit->>FileSystem: Append addition session to sessions.json
+    Streamlit-->>User: Show score, accuracy, and speed summary
+```
+**Session State Keys**:
+```python
+quiz_started: bool
+quiz_finished: bool
+finalized_session: bool
+order: list[tuple[int, int]]  # [(num1, num2), ...]
+idx: int
+current_q: tuple[int, int]
+score: int
+attempts: int
+history: list[dict]
+last_feedback: str
+start_ts: float
+deadline_ts: float
+seconds_per_q: int
+mode_meta: dict
+session_id: str
+active_settings_fp: str
+last_settings_fp: str
+```
+**State Design Notes**:
+- Reuse the multiplication page’s reset-on-finished-settings-change behavior so completed quizzes do not linger under a new configuration.
+- Keep in-progress state intact when navigating away and back, matching current quiz behavior.
+- Store `mode_meta` with `operation="addition"`, level name, operand bounds, question count, and timer seconds.
+**Functions**:
+- `reset_quiz_state()` - Clear shared quiz keys before restart or stop
+- `generate_addition_questions(min_num, max_num, total_q)` - Build randomized operand pairs within the selected range
+- `start_quiz(level_name, min_num, max_num, total_q, seconds_per_q)` - Initialize state and first question
+- `advance_question_or_finish()` - Move to next question or mark quiz complete
+- `record_result(result, your_answer, correct, elapsed_s)` - Append standardized history rows
+- `record_timeout()` - Save TIMEOUT results and auto-advance
+- `submit_answer(answer_text)` - Parse integer input, validate sum, update score/history, and advance
+- `compute_speed(history)` - Reuse the analytics calculation pattern from multiplication
+**Question Generation Rules**:
+- Each question is a pair `(num1, num2)` where both operands fall within the selected level range.
+- Prefer unique pairs until the available combination pool is exhausted.
+- Allow repeated pairs only when `total_q` exceeds unique combinations.
+- Shuffle final order before rendering.
+**Settings Sidebar**:
+- Difficulty level selector
+- Total questions input
+- Timer-per-question slider
+- Start/Restart and Stop actions
+**Main Quiz Surface**:
+- Current score display
+- Countdown timer
+- Question counter and progress bar
+- Prompt such as `What is 8 + 7?`
+- Numeric answer input and submit action
+- Immediate feedback region for correct, wrong, invalid, and timeout states
+**Results Surface**:
+- Final score header
+- Accuracy summary
+- Speed metrics (average time, questions per minute)
+- Optional per-range or per-operand breakdown if useful later, but not required for the first implementation
+- Actions for `Play again` and navigation back to Dashboard
+**Session Record Additions**:
+```python
+{
+    "session_id": "add-1699564800-1234",
+    "timestamp_iso": "2024-11-10T14:30:00",
+    "operation": "addition",
+    "level": "Intermediate (1-50)",
+    "operand_min": 1,
+    "operand_max": 50,
+    "seconds_per_q": 10,
+    "total_q": 20,
+    "score": 17,
+    "correct": 17,
+    "wrong": 2,
+    "timeout": 1,
+    "invalid": 0,
+    "answered": 19,
+    "accuracy_pct": 89.47,
+    "avg_time_all_s": 4.812,
+    "avg_time_answered_s": 4.221,
+    "speed_q_per_min": 12.46,
+}
+```
+**Integration Notes**:
+- Keep field names already used by Dashboard charts and tables wherever possible.
+- Additional Addition-specific fields such as `operand_min` and `operand_max` must not break existing DataFrame rendering.
+- Dashboard operation filters should work automatically once `operation="addition"` is saved consistently.
+- Invalid numeric input should show a friendly whole-number validation message and be recorded as `INVALID` only if the implementation chooses to track it the same way as multiplication.
+- Corrupt or missing `sessions.json` should fall back to an empty list without crashing the page.
+- Timer expiry and manual submission must never double-record the same question.
+- Add targeted tests or manual verification cases for question generation range correctness.
+- Verify unique-question behavior for small ranges and duplicate fallback for oversized quizzes.
+- Verify session rows appear in Dashboard filters and trends without schema regressions.
+- Verify state reset behavior after finishing a quiz and changing Addition settings.
 ---
-
 ### 5. Subtraction Quiz Page (`pages/Subtraction.py`)
 **Purpose**: Age-appropriate subtraction quiz
 

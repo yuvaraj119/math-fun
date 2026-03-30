@@ -519,6 +519,288 @@ def load_sessions():
 
 ### 3.2 Data Transformation Pipeline (`pages/Dashboard.py` lines 26-50)
 
+---
+
+## Part 4: Addition Quiz Implementation Plan (REQ-005)
+
+### 4.1 Target File Structure (`pages/Addition.py`)
+
+**Implementation Goal**: Reuse the multiplication page architecture where it reduces risk, but simplify where Addition does not need per-mode daily best tracking.
+
+**Planned File Layout**:
+```python
+import json
+import random
+import time
+from datetime import datetime
+from pathlib import Path
+
+import streamlit as st
+
+SESSIONS_FILE = Path("sessions.json")
+
+ADDITION_LEVELS = {
+    "Beginner (1-10)": (1, 10),
+    "Intermediate (1-50)": (1, 50),
+    "Advanced (1-100)": (1, 100),
+}
+
+# JSON helpers
+# analytics helpers
+# quiz state helpers
+# question generation
+# answer submission / timeout logic
+# settings sidebar
+# active quiz view
+# results summary and session persistence
+```
+
+**Why This Shape?**:
+- Keeps the page easy to compare with `pages/Multiplication.py`
+- Minimizes cognitive load during implementation and review
+- Preserves room to extract shared helpers later without forcing a refactor now
+
+---
+
+### 4.2 Session State Reuse Strategy
+
+**Implementation Pattern**: Mirror the Multiplication session keys wherever the behavior is the same.
+
+**Recommended State Keys**:
+```python
+quiz_started: bool
+quiz_finished: bool
+finalized_session: bool
+order: list[tuple[int, int]]
+idx: int
+current_q: tuple[int, int]
+score: int
+attempts: int
+history: list[dict]
+last_feedback: str
+start_ts: float
+deadline_ts: float
+seconds_per_q: int
+mode_meta: dict
+session_id: str
+active_settings_fp: str
+last_settings_fp: str
+```
+
+**Notes**:
+- Omit `mode_key`, `celebrated`, and best-score-specific state unless requirements expand later.
+- Keep `finalized_session` to prevent duplicate `sessions.json` writes during Streamlit reruns.
+- Use the same reset behavior after a finished quiz when settings change.
+
+---
+
+### 4.3 Question Generation Plan (`T-101`)
+
+**Function**: `generate_addition_questions(min_num: int, max_num: int, total_q: int) -> list[tuple[int, int]]`
+
+**Reference Algorithm**:
+```python
+def generate_addition_questions(min_num, max_num, total_q):
+    all_pairs = [
+        (num1, num2)
+        for num1 in range(min_num, max_num + 1)
+        for num2 in range(min_num, max_num + 1)
+    ]
+    random.shuffle(all_pairs)
+
+    if total_q <= len(all_pairs):
+        return all_pairs[:total_q]
+
+    out = all_pairs[:]
+    while len(out) < total_q:
+        out.append(random.choice(all_pairs))
+    random.shuffle(out)
+    return out
+```
+
+**Implementation Notes**:
+- Ordered pairs are acceptable for v1 of Addition; `(2, 5)` and `(5, 2)` may both appear because they produce different visual prompts even though the sum matches.
+- This mirrors the multiplication generator and keeps behavior predictable.
+- For `Advanced (1-100)`, the unique pair pool is large enough for all expected quiz sizes.
+
+**Complexity**:
+- Time: O(n^2) to build the pair pool for a selected range
+- Space: O(n^2) for the unique pair list
+- Acceptable for current range sizes and local-only app usage
+
+---
+
+### 4.4 Quiz Initialization (`T-100`)
+
+**Function**: `start_quiz(level_name, min_num, max_num, total_q, seconds_per_q)`
+
+**Implementation Sketch**:
+```python
+def start_quiz(level_name, min_num, max_num, total_q, seconds_per_q):
+    order = generate_addition_questions(min_num, max_num, total_q)
+
+    st.session_state.quiz_started = True
+    st.session_state.quiz_finished = False
+    st.session_state.finalized_session = False
+
+    st.session_state.order = order
+    st.session_state.idx = 0
+    st.session_state.score = 0
+    st.session_state.attempts = 0
+    st.session_state.history = []
+    st.session_state.last_feedback = ""
+    st.session_state.current_q = order[0]
+    st.session_state.seconds_per_q = int(seconds_per_q)
+
+    st.session_state.mode_meta = {
+        "operation": "addition",
+        "level": level_name,
+        "operand_min": int(min_num),
+        "operand_max": int(max_num),
+        "total_q": int(total_q),
+        "seconds_per_q": int(seconds_per_q),
+    }
+
+    now = time.time()
+    st.session_state.start_ts = now
+    st.session_state.deadline_ts = now + int(seconds_per_q)
+    st.session_state.session_id = f"add-{int(now)}-{random.randint(1000, 9999)}"
+```
+
+**Key Decision**:
+- Persist `operand_min` and `operand_max` directly in `mode_meta` so the saved session row is self-describing for future Dashboard enhancements.
+
+---
+
+### 4.5 Answer Validation and Timeout Flow (`T-102`)
+
+**Core Functions**:
+- `advance_question_or_finish()`
+- `record_result(result, your_answer, correct, elapsed_s)`
+- `record_timeout()`
+- `submit_answer(answer_text)`
+
+**Implementation Sketch**:
+```python
+def submit_answer(answer_text):
+    num1, num2 = st.session_state.current_q
+    correct = num1 + num2
+    st.session_state.attempts += 1
+    elapsed = time.time() - float(st.session_state.start_ts)
+
+    try:
+        answer = int(answer_text.strip())
+    except Exception:
+        record_result("INVALID", answer_text, correct, elapsed)
+        st.session_state.last_feedback = "⚠ Please enter a whole number"
+        advance_question_or_finish()
+        return
+
+    if answer == correct:
+        st.session_state.score += 1
+        record_result("CORRECT", answer, correct, elapsed)
+        st.session_state.last_feedback = f"✅ Correct! {num1} + {num2} = {correct}"
+    else:
+        record_result("WRONG", answer, correct, elapsed)
+        st.session_state.last_feedback = f"❌ Oops! {num1} + {num2} = {correct}"
+
+    advance_question_or_finish()
+```
+
+**Timeout Rule**:
+```python
+def record_timeout():
+    num1, num2 = st.session_state.current_q
+    correct = num1 + num2
+    elapsed = time.time() - float(st.session_state.start_ts)
+    record_result("TIMEOUT", None, correct, elapsed)
+    st.session_state.last_feedback = f"⏰ Time's up! {num1} + {num2} = {correct}"
+    advance_question_or_finish()
+```
+
+**Important Guardrail**:
+- Results for a question must be recorded exactly once. The timer rerun path and the submit path must not both finalize the same prompt.
+
+---
+
+### 4.6 Results and Session Recording (`T-103`)
+
+**Implementation Goal**: Save Addition sessions using the Dashboard-compatible schema already consumed by `pages/Dashboard.py`.
+
+**Session Save Sketch**:
+```python
+if not st.session_state.get("finalized_session", False):
+    st.session_state.finalized_session = True
+
+    append_session(
+        {
+            "session_id": st.session_state.session_id,
+            "timestamp_iso": datetime.now().isoformat(timespec="seconds"),
+            "operation": "addition",
+            "level": meta["level"],
+            "operand_min": meta["operand_min"],
+            "operand_max": meta["operand_max"],
+            "seconds_per_q": meta["seconds_per_q"],
+            "total_q": total,
+            "score": score,
+            "correct": correct_n,
+            "wrong": wrong_n,
+            "timeout": timeout_n,
+            "invalid": invalid_n,
+            "answered": answered_n,
+            "accuracy_pct": round(accuracy, 2),
+            "avg_time_all_s": round(speed["avg_time_all"], 3),
+            "avg_time_answered_s": round(speed["avg_time_answered"], 3),
+            "speed_q_per_min": round(speed["qpm"], 3),
+        }
+    )
+```
+
+**Compatibility Notes**:
+- Keep shared metric keys identical to Multiplication so Dashboard charts need minimal or no changes.
+- Addition-specific keys should be additive, not replacements for existing fields.
+- `operation = "addition"` is the main integration point for Dashboard filtering.
+
+---
+
+### 4.7 Dashboard Impact (`T-103`)
+
+**Expected Changes**:
+- `pages/Dashboard.py` should already ingest new Addition session rows because it reads generic JSON records and filters by `operation` and `level` when present.
+- No mandatory Dashboard code changes are required if Addition rows preserve the existing metric field names.
+- If the Addition page introduces fields absent from Multiplication, they should remain optional so the current `show_cols` filtering continues to work.
+
+**Manual Verification Targets**:
+- Addition sessions appear in the session table
+- Addition appears in operation filter options
+- Trend charts continue to render with mixed operation data
+- Existing multiplication history remains readable
+
+---
+
+### 4.8 Recommended Build Order
+
+1. Create `pages/Addition.py` scaffold with constants and shared JSON helpers.
+2. Implement state reset and quiz initialization.
+3. Implement question generation and active quiz loop.
+4. Implement answer validation and timeout handling.
+5. Implement results metrics and session persistence.
+6. Verify Dashboard compatibility with mixed session data.
+
+**Why This Order?**:
+- It follows the dependency chain from `T-100` through `T-104`.
+- It keeps state and question flow stable before analytics integration.
+- It reduces the chance of debugging UI, timer, and persistence problems at the same time.
+
+---
+
+### 4.9 Risks and Watchpoints
+
+- `Advanced (1-100)` creates 10,000 ordered pairs, which is acceptable locally but should still avoid unnecessary recomputation during reruns.
+- Streamlit reruns can double-save results if `finalized_session` checks are misplaced.
+- Invalid input handling must match the user-facing wording approved in `Requirements.md`.
+- Addition session rows must not break Dashboard assumptions about optional columns.
+
 **Step 1: Load and DataFrame conversion**
 ```python
 sessions = load_sessions()
@@ -1146,7 +1428,252 @@ After completing Implementations.md, proceed to **Testing.md** to define test st
 3. ✅ design.md - Architect the solution
 4. ✅ ARCHITECTURE.md - Update system diagrams
 5. ✅ tasks.md - Break into development tasks
-6. ✅ Implementations.md - Add code examples (YOU ARE HERE)
-7. → Testing.md - Define test strategy
-8. → README.md - Update documentation
-9. → RELEASE - Tag and publish
+6. ✅ Implementations.md - Prepare implementation details (YOU ARE HERE)
+7. → Coding.md - Implement approved source changes and record them
+8. → Testing.md - Define test strategy
+9. → README.md - Update documentation
+10. → RELEASE - Tag and publish
+
+---
+
+## Part 4: Addition Quiz Implementation Plan (REQ-005)
+
+### 4.1 Target File Structure (`pages/Addition.py`)
+---
+**Implementation Goal**: Reuse the multiplication page architecture where it reduces risk, but simplify where Addition does not need per-mode daily best tracking.
+**Planned File Layout**:
+```python
+import json
+import random
+import time
+from datetime import datetime
+from pathlib import Path
+import streamlit as st
+SESSIONS_FILE = Path("sessions.json")
+ADDITION_LEVELS = {
+    "Beginner (1-10)": (1, 10),
+    "Intermediate (1-50)": (1, 50),
+    "Advanced (1-100)": (1, 100),
+}
+```
+**Why This Shape?**:
+- Keeps the page easy to compare with `pages/Multiplication.py`
+- Minimizes cognitive load during implementation and review
+- Preserves room to extract shared helpers later without forcing a refactor now
+
+---
+
+### 4.2 Session State Reuse Strategy
+
+**Implementation Pattern**: Mirror the Multiplication session keys wherever the behavior is the same.
+**Recommended State Keys**:
+```python
+quiz_started: bool
+quiz_finished: bool
+finalized_session: bool
+order: list[tuple[int, int]]
+idx: int
+current_q: tuple[int, int]
+score: int
+attempts: int
+history: list[dict]
+last_feedback: str
+start_ts: float
+deadline_ts: float
+seconds_per_q: int
+mode_meta: dict
+session_id: str
+active_settings_fp: str
+last_settings_fp: str
+```
+**Notes**:
+- Omit `mode_key`, `celebrated`, and best-score-specific state unless requirements expand later.
+- Keep `finalized_session` to prevent duplicate `sessions.json` writes during Streamlit reruns.
+- Use the same reset behavior after a finished quiz when settings change.
+
+---
+
+### 4.3 Question Generation Plan (`T-101`)
+
+**Function**: `generate_addition_questions(min_num: int, max_num: int, total_q: int) -> list[tuple[int, int]]`
+**Reference Algorithm**:
+```python
+def generate_addition_questions(min_num, max_num, total_q):
+    all_pairs = [
+        (num1, num2)
+        for num1 in range(min_num, max_num + 1)
+        for num2 in range(min_num, max_num + 1)
+    ]
+    random.shuffle(all_pairs)
+    if total_q <= len(all_pairs):
+        return all_pairs[:total_q]
+    out = all_pairs[:]
+    while len(out) < total_q:
+        out.append(random.choice(all_pairs))
+    random.shuffle(out)
+    return out
+```
+**Implementation Notes**:
+- Ordered pairs are acceptable for v1 of Addition; `(2, 5)` and `(5, 2)` may both appear because they produce different visual prompts even though the sum matches.
+- This mirrors the multiplication generator and keeps behavior predictable.
+- For `Advanced (1-100)`, the unique pair pool is large enough for all expected quiz sizes.
+**Complexity**:
+- Time: O(n²) to build the pair pool for a selected range
+- Space: O(n²) for the unique pair list
+- Acceptable for current range sizes and local-only app usage
+
+---
+
+### 4.4 Quiz Initialization (`T-100`)
+
+**Function**: `start_quiz(level_name, min_num, max_num, total_q, seconds_per_q)`
+**Implementation Sketch**:
+```python
+def start_quiz(level_name, min_num, max_num, total_q, seconds_per_q):
+    order = generate_addition_questions(min_num, max_num, total_q)
+    st.session_state.quiz_started = True
+    st.session_state.quiz_finished = False
+    st.session_state.finalized_session = False
+    st.session_state.order = order
+    st.session_state.idx = 0
+    st.session_state.score = 0
+    st.session_state.attempts = 0
+    st.session_state.history = []
+    st.session_state.last_feedback = ""
+    st.session_state.current_q = order[0]
+    st.session_state.seconds_per_q = int(seconds_per_q)
+    st.session_state.mode_meta = {
+        "operation": "addition",
+        "level": level_name,
+        "operand_min": int(min_num),
+        "operand_max": int(max_num),
+        "total_q": int(total_q),
+        "seconds_per_q": int(seconds_per_q),
+    }
+    now = time.time()
+    st.session_state.start_ts = now
+    st.session_state.deadline_ts = now + int(seconds_per_q)
+    st.session_state.session_id = f"add-{int(now)}-{random.randint(1000, 9999)}"
+```
+**Key Decision**:
+- Persist `operand_min` and `operand_max` directly in `mode_meta` so the saved session row is self-describing for future Dashboard enhancements.
+
+---
+
+### 4.5 Answer Validation and Timeout Flow (`T-102`)
+
+**Core Functions**:
+- `advance_question_or_finish()`
+- `record_result(result, your_answer, correct, elapsed_s)`
+- `record_timeout()`
+- `submit_answer(answer_text)`
+**Implementation Sketch**:
+```python
+def submit_answer(answer_text):
+    num1, num2 = st.session_state.current_q
+    correct = num1 + num2
+    st.session_state.attempts += 1
+    elapsed = time.time() - float(st.session_state.start_ts)
+    try:
+        answer = int(answer_text.strip())
+    except Exception:
+        record_result("INVALID", answer_text, correct, elapsed)
+        st.session_state.last_feedback = "⚠ Please enter a whole number"
+        advance_question_or_finish()
+        return
+    if answer == correct:
+        st.session_state.score += 1
+        record_result("CORRECT", answer, correct, elapsed)
+        st.session_state.last_feedback = f"✅ Correct! {num1} + {num2} = {correct}"
+    else:
+        record_result("WRONG", answer, correct, elapsed)
+        st.session_state.last_feedback = f"❌ Oops! {num1} + {num2} = {correct}"
+    advance_question_or_finish()
+```
+**Timeout Rule**:
+```python
+def record_timeout():
+    num1, num2 = st.session_state.current_q
+    correct = num1 + num2
+    elapsed = time.time() - float(st.session_state.start_ts)
+    record_result("TIMEOUT", None, correct, elapsed)
+    st.session_state.last_feedback = f"⏰ Time's up! {num1} + {num2} = {correct}"
+    advance_question_or_finish()
+```
+**Important Guardrail**:
+- Results for a question must be recorded exactly once. The timer rerun path and the submit path must not both finalize the same prompt.
+
+---
+
+### 4.6 Results and Session Recording (`T-103`)
+
+**Implementation Goal**: Save Addition sessions using the Dashboard-compatible schema already consumed by `pages/Dashboard.py`.
+**Session Save Sketch**:
+```python
+if not st.session_state.get("finalized_session", False):
+    st.session_state.finalized_session = True
+    append_session(
+        {
+            "session_id": st.session_state.session_id,
+            "timestamp_iso": datetime.now().isoformat(timespec="seconds"),
+            "operation": "addition",
+            "level": meta["level"],
+            "operand_min": meta["operand_min"],
+            "operand_max": meta["operand_max"],
+            "seconds_per_q": meta["seconds_per_q"],
+            "total_q": total,
+            "score": score,
+            "correct": correct_n,
+            "wrong": wrong_n,
+            "timeout": timeout_n,
+            "invalid": invalid_n,
+            "answered": answered_n,
+            "accuracy_pct": round(accuracy, 2),
+            "avg_time_all_s": round(speed["avg_time_all"], 3),
+            "avg_time_answered_s": round(speed["avg_time_answered"], 3),
+            "speed_q_per_min": round(speed["qpm"], 3),
+        }
+    )
+```
+**Compatibility Notes**:
+- Keep shared metric keys identical to Multiplication so Dashboard charts need minimal or no changes.
+- Addition-specific keys should be additive, not replacements for existing fields.
+- `operation = "addition"` is the main integration point for Dashboard filtering.
+
+---
+
+### 4.7 Dashboard Impact (`T-103`)
+
+**Expected Changes**:
+- `pages/Dashboard.py` should already ingest new Addition session rows because it reads generic JSON records and filters by `operation` and `level` when present.
+- No mandatory Dashboard code changes are required if Addition rows preserve the existing metric field names.
+- If the Addition page introduces fields absent from Multiplication, they should remain optional so the current `show_cols` filtering continues to work.
+**Manual Verification Targets**:
+- Addition sessions appear in the session table
+- Addition appears in operation filter options
+- Trend charts continue to render with mixed operation data
+- Existing multiplication history remains readable
+
+---
+
+### 4.8 Recommended Build Order
+
+1. Create `pages/Addition.py` scaffold with constants and shared JSON helpers.
+2. Implement state reset and quiz initialization.
+3. Implement question generation and active quiz loop.
+4. Implement answer validation and timeout handling.
+5. Implement results metrics and session persistence.
+6. Verify Dashboard compatibility with mixed session data.
+**Why This Order?**:
+- It follows the dependency chain from `T-100` through `T-104`.
+- It keeps state and question flow stable before analytics integration.
+- It reduces the chance of debugging UI, timer, and persistence problems at the same time.
+
+---
+
+### 4.9 Risks and Watchpoints
+
+- `Advanced (1-100)` creates 10,000 ordered pairs, which is acceptable locally but should still avoid unnecessary recomputation during reruns.
+- Streamlit reruns can double-save results if `finalized_session` checks are misplaced.
+- Invalid input handling must match the user-facing wording approved in `Requirements.md`.
+- Addition session rows must not break Dashboard assumptions about optional columns.

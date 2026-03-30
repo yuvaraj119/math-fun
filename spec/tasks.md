@@ -111,87 +111,104 @@ Tasks are organized by component and priority level:
 ## New Features - Phase 1 (Addition Quiz)
 
 ### T-100: Create Addition Quiz Page (P1)
-**Status**: Not Started  
-**Description**: Implement addition quiz with similar structure to multiplication
+**Status**: Not Started
+**Description**: Implement `pages/Addition.py` using the existing multiplication quiz flow as the baseline, adapted for addition-specific configuration and persistence.
 
 **Acceptance Criteria**:
 - [ ] New file `pages/Addition.py` created
-- [ ] Configurable number ranges (1-10, 1-20, 1-50, 1-100)
-- [ ] Three difficulty levels supported
-- [ ] Timed questions with countdown
-- [ ] Answer validation and feedback
-- [ ] Results summary with metrics
-- [ ] Session persistence
-- [ ] Best score tracking per mode
-
+- [ ] Three difficulty levels supported: Beginner (1-10), Intermediate (1-50), Advanced (1-100)
+- [ ] Configurable total question count from 1 to 500
+- [ ] Configurable timer from 2 to 60 seconds per question
+- [ ] Timed questions with countdown and automatic timeout handling
+- [ ] Answer validation and feedback for correct, wrong, invalid, and timeout outcomes
+- [ ] Results summary with score, accuracy, and speed metrics
+- [ ] Session persistence to `sessions.json` using Dashboard-compatible fields
+- [ ] State reset behavior matches existing quiz navigation expectations
 **Files to Create**:
 - `pages/Addition.py`
 
-**Estimated Effort**: 6 hours  
-**Dependencies**: None  
+**Estimated Effort**: 6 hours
+**Dependencies**: None
 **Owner**: Feature Development
 
 **Subtasks**:
-- T-101: Question generation logic
-- T-102: UI layout and feedback
-- T-103: Metrics calculation
-- T-104: Testing and validation
+- T-101: Addition question generation logic
+- T-102: Addition quiz UI and interaction flow
+- T-103: Addition analytics and Dashboard integration
+- T-104: Addition validation and manual verification
 
 ---
 
 ### T-101: Addition Question Generation (P1)
-**Status**: Not Started  
-**Description**: Implement question generation for addition
+**Status**: Not Started
+**Description**: Implement randomized addition question generation that respects difficulty ranges and quiz size.
 
 **Acceptance Criteria**:
-- [ ] Generate random two-number addition questions
-- [ ] Support configurable number ranges
-- [ ] Prevent unreasonable sums (optional max sum parameter)
-- [ ] Questions are random and varied
-- [ ] Performance: <100ms for 100 questions
+- [ ] Generate random two-number addition questions within the selected difficulty range
+- [ ] Produce exactly the requested number of questions
+- [ ] Avoid duplicate pairs when the available unique pool is sufficient
+- [ ] Allow duplicate pairs only when `total_q` exceeds the available unique combinations
+- [ ] Shuffle final question order before quiz display
+- [ ] Performance target: <100ms for generating 100 questions
 
-**Estimated Effort**: 2 hours  
-**Dependencies**: T-100  
+**Estimated Effort**: 2 hours
+**Dependencies**: T-100
 **Owner**: Backend Logic
 
 ---
 
-### T-102: Addition Quiz UI Layout (P1)
-**Status**: Not Started  
-**Description**: Design and implement addition quiz interface
+### T-102: Addition Quiz UI & Interaction Flow (P1)
+**Status**: Not Started
+**Description**: Implement the Addition page layout, timer flow, answer submission, and results presentation.
 
 **Acceptance Criteria**:
-- [ ] Settings sidebar with number range selection
-- [ ] Display addition questions clearly (e.g., "What is 23 + 47?")
-- [ ] Timer display and countdown
-- [ ] Answer input and submit button
-- [ ] Feedback messages (correct/wrong/timeout)
-- [ ] Progress bar and score display
-- [ ] Results screen with metrics
+- [ ] Settings sidebar includes level selector, question count, timer, Start/Restart, and Stop actions
+- [ ] Main quiz view displays score, question counter, progress bar, timer, and current addition prompt
+- [ ] Numeric answer input and submit action behave consistently with the multiplication page
+- [ ] Feedback messages cover correct, incorrect, invalid, and timeout states
+- [ ] Timer expiry advances automatically without double-recording questions
+- [ ] Results screen includes final score, accuracy, speed metrics, and replay/navigation actions
 
-**Estimated Effort**: 3 hours  
-**Dependencies**: T-100, T-101  
+**Estimated Effort**: 3 hours
+**Dependencies**: T-100, T-101
 **Owner**: Frontend
 
 ---
 
-### T-103: Addition Metrics & Analytics (P1)
-**Status**: Not Started  
-**Description**: Calculate and display addition quiz metrics
+### T-103: Addition Analytics & Dashboard Integration (P1)
+**Status**: Not Started
+**Description**: Save Addition session data in the shared analytics format so the Dashboard can report it alongside other operations.
 
 **Acceptance Criteria**:
-- [ ] Accuracy percentage calculated correctly
-- [ ] Speed metrics (avg time, questions per minute)
-- [ ] Per-range breakdown (e.g., accuracy for 1-10 vs 1-20)
-- [ ] Session data saved to sessions.json
-- [ ] Best score tracking per mode
+- [ ] Accuracy percentage calculated correctly from answered questions
+- [ ] Speed metrics calculated correctly (average time, questions per minute)
+- [ ] Session data saved to `sessions.json` with `operation = addition`
+- [ ] Addition session rows remain compatible with existing Dashboard tables, filters, and trend charts
+- [ ] Addition metadata includes level and operand range without breaking existing views
+- [ ] No `best_scores.json` dependency is introduced unless separately specified
 
-**Estimated Effort**: 2 hours  
-**Dependencies**: T-100, T-102  
+**Estimated Effort**: 2 hours
+**Dependencies**: T-100, T-102
 **Owner**: Analytics
 
 ---
 
+### T-104: Addition Validation & Manual Verification (P1)
+**Status**: Not Started
+**Description**: Verify REQ-005 behavior end-to-end before implementation is considered complete.
+
+**Acceptance Criteria**:
+- [ ] Validate level ranges map correctly to Beginner, Intermediate, and Advanced
+- [ ] Validate invalid input and timeout behavior
+- [ ] Validate state reset after finishing a quiz and changing settings
+- [ ] Validate Addition sessions appear in Dashboard operation filters
+- [ ] Validate no regressions in Multiplication and Dashboard flows caused by shared session storage updates
+
+**Estimated Effort**: 2 hours
+**Dependencies**: T-100, T-101, T-102, T-103
+**Owner**: QA
+
+---
 ## New Features - Phase 2 (Subtraction & Division)
 
 ### T-200: Create Subtraction Quiz Page (P1)
@@ -659,4 +676,3 @@ After completing Tasks.md, proceed to **Implementations.md** to add code example
 7. → Testing.md - Define test strategy
 8. → README.md - Update documentation
 9. → Release.md - Tag and publish
-

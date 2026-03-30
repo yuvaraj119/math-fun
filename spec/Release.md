@@ -10,8 +10,8 @@ We use semantic versioning (vX.Y.Z) for all project releases.
 | Version | Release Date | Status | Key Features | Documentation Status |
 |---------|--------------|--------|--------------|----------------------|
 | **v1.0.0** | 2026-03-01 | ✅ Released | Multiplication Quiz, Dashboard | ✅ Completed |
-| **v1.1.0** | 2026-03-01 | ✅ Released | Documentation Update | ✅ Completed |
-| **v2.0.0** | Q2 2026 | 🔄 Planned | Addition, Subtraction, Division | 🔄 Planned |
+| **v1.1.0** | 2026-03-15 | ✅ Released | Documentation Update, 10-stage SDD flow | ✅ Completed |
+| **v2.0.0** | 2026-03-15 | 🚧 In Progress | Addition implemented, Subtraction and Division planned | 🚧 In Progress |
 | **v3.0.0** | Q3 2026 | 🔄 Planned | Difficulty Progression, Audio | 🔄 Planned |
 | **v4.0.0** | Q4 2026 | 🔄 Planned | Mobile Optimization | 🔄 Planned |
 
@@ -27,9 +27,17 @@ We use semantic versioning (vX.Y.Z) for all project releases.
 - ✅ Local JSON storage for best scores and session persistence.
 - ✅ SDD documentation (Features, Requirements, Design, Architecture, Tasks, Implementations, Testing, README).
 
-### v1.1.0 (2026-03-01) - Documentation
-- ✅ SDD Documentation updated to 9-stage process.
+### v1.1.0 (2026-03-15) - Documentation
+- ✅ SDD documentation updated to 10-stage process.
+- ✅ Added dedicated `Coding.md` stage to execution workflow.
 - ✅ Synchronized all specification files.
+
+### v2.0.0 (2026-03-15) - Operations Suite In Progress
+- ✅ Addition Quiz implemented in `pages/Addition.py`.
+- ✅ Dashboard and landing-page copy updated for Addition.
+- ✅ Coding-stage execution record added for REQ-005.
+- 🔄 Subtraction Quiz still pending.
+- 🔄 Division Quiz still pending.
 
 ---
 
@@ -41,7 +49,7 @@ We use semantic versioning (vX.Y.Z) for all project releases.
 - 🔄 Performance optimization (T-003).
 
 ### v2.0.0 (Q2 2026) - Operations Suite
-- 🔄 Addition Quiz (T-100).
+- ✅ Addition Quiz (T-100).
 - 🔄 Subtraction Quiz (Planned).
 - 🔄 Division Quiz (Planned).
 
@@ -54,14 +62,14 @@ We use semantic versioning (vX.Y.Z) for all project releases.
 ## 4. Checklist for Releases
 - [ ] Version number bumped.
 - [ ] Documentation updated to match current feature set.
-- [ ] All manual test cases passed.
+- [x] All manual test cases passed.
 - [ ] CHANGELOG updated (Release History).
 - [ ] Tag created in version control.
 
 ---
 
 ## TEMPLATE: Finalizing a Release
-**Step 9 in the Feature Development Flow (Release & Publication Phase)**
+**Step 10 in the Feature Development Flow (Release & Publication Phase)**
 
 After completing all development, verification, and documentation steps, finalize the release.
 
@@ -75,15 +83,15 @@ Document what's new, changed, or fixed in this version.
 - ✅ Documentation updates (Step 8)
 
 ### Step 3: Verify All SDD Steps
-Ensure the FEATURE DEVELOPMENT FLOW CHECKLIST at the bottom of all 9 files is fully marked for this feature/release.
+Ensure the FEATURE DEVELOPMENT FLOW CHECKLIST across the 10-stage flow is fully marked for this feature/release.
 
 ---
 
 ## Checklist When Finalizing Release
 - [ ] Release Master Table updated with version and date
 - [ ] Release History (Changelog) documented
-- [ ] All 9 SDD steps verified as complete
-- [ ] All tests passed and documented in Testing.md
+- [ ] All 10 SDD steps verified as complete
+- [x] All tests passed and documented in Testing.md
 - [ ] Version tag created in version control (if applicable)
 - [ ] Ready to publish
 
@@ -93,7 +101,8 @@ Ensure the FEATURE DEVELOPMENT FLOW CHECKLIST at the bottom of all 9 files is fu
 3. ✅ design.md - Architect the solution
 4. ✅ ARCHITECTURE.md - Update system diagrams
 5. ✅ tasks.md - Break into development tasks
-6. ✅ implementations.md - Add code examples
-7. ✅ Testing.md - Define test strategy
-8. ✅ README.md - Update documentation
-9. ✅ Release.md - Tag and publish (YOU ARE HERE)
+6. ✅ implementations.md - Prepare implementation details
+7. ✅ Coding.md - Implement approved source changes and record them
+8. ✅ Testing.md - Define test strategy
+9. ✅ README.md - Update documentation
+10. ✅ Release.md - Tag and publish (YOU ARE HERE)

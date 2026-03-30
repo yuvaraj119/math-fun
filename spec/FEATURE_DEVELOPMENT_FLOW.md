@@ -6,7 +6,7 @@
 
 ## Overview
 
-When adding a new feature (e.g., Addition Quiz, Audio Feedback, Mobile Optimization), follow these 9 steps **in strict order**:
+When adding a new feature (e.g., Addition Quiz, Audio Feedback, Mobile Optimization), follow these 10 steps **in strict order**:
 
 ```mermaid
 graph LR
@@ -15,9 +15,10 @@ graph LR
     C --> D[4. Architecture.md]
     D --> E[5. Tasks.md]
     E --> F[6. Implementations.md]
-    F --> G[7. Testing.md]
-    G --> H[8. README.md]
-    H --> I[9. Release.md]
+    F --> G[7. Coding.md]
+    G --> H[8. Testing.md]
+    H --> I[9. README.md]
+    I --> J[10. Release.md]
     
     style A fill:#FFB3BA,stroke:#333,stroke-width:2px,color:#000
     style B fill:#FFDFBA,stroke:#333,stroke-width:2px,color:#000
@@ -27,7 +28,8 @@ graph LR
     style F fill:#A0E7E5,stroke:#333,stroke-width:2px,color:#000
     style G fill:#B4F8C8,stroke:#333,stroke-width:2px,color:#000
     style H fill:#FBE7C6,stroke:#333,stroke-width:2px,color:#000
-    style I fill:#97E5D4,stroke:#333,stroke-width:2px,color:#000
+    style I fill:#FBE7C6,stroke:#333,stroke-width:2px,color:#000
+    style J fill:#97E5D4,stroke:#333,stroke-width:2px,color:#000
 ```
 
 **Each step depends on the previous one being complete.**
@@ -241,6 +243,80 @@ SO THAT I can practice at my preferred difficulty level
 
 ---
 
+## Step 5: Tasks.md - Break Work Into Execution Tasks
+
+**Purpose**: Convert the approved feature design into concrete implementation, validation, and documentation tasks.
+
+**File Location**: `/spec/Tasks.md`
+
+### What to Do:
+1. Create or update task entries for implementation, UI, analytics, validation, and any supporting work.
+2. Sequence tasks so coding can proceed with minimal ambiguity.
+3. Capture dependencies between tasks.
+4. Make acceptance criteria specific enough that code completion is measurable.
+
+### Important Rule:
+- `Tasks.md` is the handoff into implementation planning. Once Steps 1-5 are complete, Step 6 prepares the implementation details and Step 7 performs the actual code changes.
+
+### Next: Go to **Step 6: Implementations.md**
+
+---
+
+## Step 6: Implementations.md - Finalize Implementation Details
+
+**Purpose**: Finalize the concrete implementation approach before source files are changed.
+
+**File Location**: `/spec/Implementations.md`
+
+### What to Do:
+1. Map the approved tasks to specific files, helper functions, and integration points.
+2. Keep the implementation plan aligned with `Requirements.md`, `Design.md`, and `Architecture.md`.
+3. Record the final implementation approach, helper functions, data structures, and file-level decisions in `Implementations.md`.
+4. Note any expected deviations from the original design and why they may be necessary.
+
+### Mandatory Output of Step 6:
+- Matching implementation notes in `spec/Implementations.md`
+- Clear mapping from approved tasks to planned code changes
+- Any necessary integration notes for persistence, navigation, or analytics compatibility
+
+### Checklist:
+- [ ] Planned file changes documented
+- [ ] Core functions, state, and data structures specified
+- [ ] `Implementations.md` is concrete enough to execute without ambiguity
+- [ ] Any expected deviations from the spec are documented
+- [ ] Ready to begin Coding
+
+### Next: Go to **Step 7: Coding.md**
+
+---
+
+## Step 7: Coding.md - Record and Track Approved Source Changes
+
+**Purpose**: Write or modify the real application code based on the approved implementation plan, and record the implemented scope in `Coding.md`.
+
+**File Location**: `/spec/Coding.md` plus the actual source files such as `/pages/*.py`, `app.py`, and any supporting project files.
+
+### What to Do:
+1. Implement the feature in the codebase according to `Tasks.md` and `Implementations.md`.
+2. Keep the code aligned with `Requirements.md`, `Design.md`, and `Architecture.md`.
+3. Update implementation notes if the final code differs from the planned approach.
+4. Make any necessary supporting changes for persistence, navigation, analytics, or shared helpers.
+
+### Mandatory Output of Step 7:
+- Updated source files implementing the feature
+- Implementation notes synchronized with the real code
+- Any required supporting changes completed
+
+### Checklist:
+- [ ] Approved source code changes implemented
+- [ ] Source files match the documented design or documented deviations
+- [ ] `Implementations.md` reflects the real code, not just intended pseudocode
+- [ ] Ready to validate in `Testing.md`
+
+### Next: Go to **Step 8: Testing.md**
+
+---
+
 ## Step 5: TASKS.MD - Create Discrete Tasks (Agent OS Standard)
 
 **Purpose**: Break the feature into actionable, trackable tasks.
@@ -335,25 +411,42 @@ T-103 (Metrics)
 
 ---
 
-## Step 6: Implementations.md - Create Feature Source Code
-**Purpose**: Document the feature's implementation details and patterns.
+## Step 6: Implementations.md - Prepare Implementation Details
+**Purpose**: Document the feature's concrete implementation details and coding plan before changing source files.
 **File Location**: `/spec/Implementations.md`
 ### What to Do:
-1. Document the **Configuration Section** (Constants, settings, parameters).
-2. Document the **Algorithm/Logic** (Pseudo-code or key logic blocks).
+1. Document the **Configuration Section** (constants, settings, parameters).
+2. Document the **Algorithm/Logic** (pseudo-code or key logic blocks).
 3. Document **Session State Management** (st.session_state variables).
 4. Document **UI/UX Components** (Streamlit page layout and feedback).
-5. Document **Data Handling** (Persistence, models, JSON structures).
-6. Document **Error Handling** (Common failure points and recovery).
+5. Document **Data Handling** (persistence, models, JSON structures).
+6. Document **Error Handling** (common failure points and recovery).
+7. Identify the exact source files that the Coding step must edit.
 ### Checklist:
 - [ ] Code examples and patterns added
 - [ ] Key functions and algorithms documented
 - [ ] State management described
 - [ ] Data models and examples included
 - [ ] Production-ready patterns used
-### Next: Go to **Step 7: Testing.md**
+- [ ] Source-file coding plan identified
+### Next: Go to **Step 7: Coding.md**
 ---
-## Step 7: TESTING.MD - Define Test Strategy & Cases
+## Step 7: CODING.MD - Create Feature Source Code Record
+**Purpose**: Implement the approved feature in the actual source files.
+**File Location**: `/spec/Coding.md` plus real source files in the repository (for example `/pages/Addition.py`, `/pages/Dashboard.py`, `app.py`)
+### What to Do:
+1. Create or update the source files described in `Design.md`, `Tasks.md`, and `Implementations.md`.
+2. Implement helper functions and state management logic.
+3. Add JSON persistence, UI, and analytics updates described in the spec.
+4. Sync `Implementations.md` if the final code differs from the plan.
+### Checklist:
+- [ ] Source files created or updated
+- [ ] Logic matches approved requirements
+- [ ] Supporting integration changes completed
+- [ ] Implementation notes aligned with final code
+### Next: Go to **Step 8: Testing.md**
+---
+## Step 8: TESTING.MD - Define Test Strategy & Cases
 **Purpose**: Ensure the feature works as expected and doesn't break existing functionality.
 **File Location**: `/spec/Testing.md`
 ### What to Do:
@@ -368,9 +461,9 @@ T-103 (Metrics)
 - [ ] Automated validation logic defined
 - [ ] Edge cases and negative tests included
 - [ ] Verification steps clear and testable
-### Next: Go to **Step 8: README.md**
+### Next: Go to **Step 9: README.md**
 ---
-## Step 8: README.MD - Update Project Index & Timeline
+## Step 9: README.MD - Update Project Index & Timeline
 **Purpose**: Keep the central documentation hub and feature status current.
 **File Location**: `/spec/README.md`
 ### What to Do:
@@ -385,9 +478,9 @@ T-103 (Metrics)
 - [ ] Development timeline/roadmap current
 - [ ] Internal links verified and working
 - [ ] Changes Made log updated
-### Next: Go to **Step 9: Release.md**
+### Next: Go to **Step 10: Release.md**
 ---
-## Step 9: RELEASE.MD - Versioning & Release Checklist
+## Step 10: RELEASE.MD - Versioning & Release Checklist
 **Purpose**: Document the version history, release notes, and final release/operational checklist.
 **File Location**: `/spec/Release.md`
 ### What to Do:
@@ -437,18 +530,22 @@ Once all 9 documents and the implementation are verified:
 - [ ] Task descriptions, expected outcomes, and effort defined
 - [ ] Task dependencies and release planning updated
 ### Step 6: Implementations.md
-- [ ] Configuration and algorithm logic documented
-- [ ] Session state and UI/UX patterns shown
-- [ ] Data model examples and persistence documented
-### Step 7: Testing.md
+- [ ] Planned file changes and integration points documented
+- [ ] Configuration and algorithm logic specified
+- [ ] Session state, UI/UX patterns, and persistence behavior planned
+### Step 7: Coding.md
+- [ ] Approved source code changes implemented
+- [ ] Source files aligned with design or documented deviations
+- [ ] Implementation notes updated to match final code
+### Step 8: Testing.md
 - [ ] Test Master Table updated with test IDs (T-XXX)
 - [ ] Manual and automated test cases defined
 - [ ] Negative and regression scenarios covered
-### Step 8: README.md
+### Step 9: README.md
 - [ ] Feature Master Table status synchronized
 - [ ] Project overview and timeline updated
 - [ ] Internal documentation links verified
-### Step 9: Release.md
+### Step 10: Release.md
 - [ ] Release Master Table updated
 - [ ] Release notes and version history documented
 - [ ] Deployment strategy and VCS tagging confirmed
@@ -461,9 +558,10 @@ graph LR
     D --> A[4. Architecture.md]
     A --> T[5. Tasks.md]
     T --> I[6. Implementations.md]
-    I --> TE[7. Testing.md]
-    TE --> RM[8. README.md]
-    RM --> RE[9. Release.md]
+    I --> C[7. Coding.md]
+    C --> TE[8. Testing.md]
+    TE --> RM[9. README.md]
+    RM --> RE[10. Release.md]
     RE --> DONE((DONE ✅))
     
     style F fill:#FFB3BA,stroke:#333,stroke-width:2px,color:#000
@@ -477,5 +575,3 @@ graph LR
     style RE fill:#97E5D4,stroke:#333,stroke-width:2px,color:#000
     style DONE fill:#FFF,stroke:#333,stroke-width:2px,color:#000
 ```
-
-

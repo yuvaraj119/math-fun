@@ -1,0 +1,39 @@
+These instructions apply to the entire repository.
+- This is a local-only Streamlit math quiz app.
+- Main entrypoint: `app.py`.
+- Interactive pages live in `pages/`.
+- Current implemented quiz: `pages/Multiplication.py`.
+- Analytics/history page: `pages/Dashboard.py`.
+- Product and process documentation lives in `spec/`.
+- Python
+- Streamlit
+- Pandas
+- File-based JSON persistence
+- Install dependencies: `pip install -r requirements.txt`
+- Start app: `streamlit run app.py`
+- Treat `spec/` as the planning source of truth for product and feature work.
+- Before implementing a new feature or materially changing behavior, check the relevant spec files first.
+- Follow the repository's strict 10-step feature flow documented in `spec/FEATURE_DEVELOPMENT_FLOW.md`.
+- The required sequence is: `spec/Features.md` → `spec/Requirements.md` → `spec/Design.md` → `spec/Architecture.md` → `spec/Tasks.md` → `spec/Implementations.md` → `spec/Coding.md` → `spec/Testing.md` → `spec/README.md` → `spec/Release.md`.
+- Treat `spec/Implementations.md` as the implementation-planning step and `spec/Coding.md` as the execution record: after steps 1-6 are approved, the Coding step includes actual code changes and updates `spec/Coding.md` to reflect what was implemented.
+- Do not jump straight to code for planned feature work unless the user explicitly asks to bypass the spec process.
+- If implementation changes behavior, keep the affected spec documents aligned with the code.
+- For small bug fixes or narrow refactors, update specs only when behavior, scope, or documented expectations change.
+- Preserve the app as local-only; do not add cloud, auth, or server dependencies unless explicitly requested.
+- Keep implementations simple and readable for a small Streamlit codebase.
+- Prefer minimal, surgical changes over broad refactors.
+- Reuse existing persistence helpers before introducing new storage logic.
+- Keep file formats for `sessions.json` and `best_scores.json` backward compatible when possible.
+- Do not commit generated runtime data changes from `sessions.json` or `best_scores.json` unless the user asks.
+- Match the existing Python style in the touched file.
+- Prefer clear helper functions over deeply nested inline logic.
+- Use explicit variable names; avoid one-letter names except for short math locals already established in a file.
+- Add comments only when the logic is genuinely non-obvious.
+- Keep page state in `st.session_state` when the feature already uses it.
+- Preserve current navigation assumptions that pages are discovered from the `pages/` directory.
+- When adding new quiz pages, follow the existing pattern: page config, state initialization, quiz helpers, results summary, and local JSON persistence if needed.
+- For code changes, run the narrowest useful validation first.
+- Prefer at least a syntax check such as `python -m py_compile app.py pages/*.py` when dependencies are not needed.
+- If Streamlit behavior changes, prefer validating by launching the app locally when practical.
+- `.gitignore` already excludes local runtime artifacts and IDE files.
+- The repository currently uses `readMe.md` rather than `README.md`; keep existing filenames unless renaming is explicitly requested.

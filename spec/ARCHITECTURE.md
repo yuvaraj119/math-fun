@@ -194,44 +194,48 @@ graph TD
 ```
 
 ```
-┌──────────────────────────────────────────────────────┐
-│              STREAMLIT WEB APPLICATION               │
-│                                                      │
-│  ┌──────────────┐  ┌──────────────┐                │
-│  │ Multiplication│  │   Dashboard  │                │
-│  │    Quiz      │  │  & Analytics │                │
-│  └──────────────┘  └──────────────┘                │
-│                                                      │
-│  (Future: Addition, Subtraction, Division)         │
-│                                                      │
-│  [ALL IN-MEMORY]                                   │
-│  - Current question                                │
-│  - Score counter                                   │
-│  - Timer state                                     │
-│  - Session metadata                                │
-└────────────────┬─────────────────────────────────┘
-                 │
-                 ↓ (Save on quiz completion)
-                 
-┌──────────────────────────────────────────────────────┐
-│            LOCAL FILE STORAGE (JSON)                 │
-│                                                      │
-│  📄 best_scores.json                                │
-│     ├─ Mode key                                     │
-│     └─ Today's best score for that mode             │
-│                                                      │
-│  📄 sessions.json                                   │
-│     ├─ Session metadata                             │
-│     ├─ Questions answered                           │
-│     ├─ Scores and times                             │
-│     └─ Performance metrics                          │
-│                                                      │
-│  ❌ NO USER DATABASE                               │
-│  ❌ NO SERVER CONNECTION                           │
-│  ❌ NO CLOUD STORAGE                               │
-│  ❌ NO USER TRACKING                               │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                STREAMLIT WEB APPLICATION                    │
+│                                                              │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │ Multiplication│  │   Addition   │  │   Dashboard  │      │
+│  │    Quiz      │  │     Quiz     │  │  & Analytics │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+│                                                              │
+│  Planned next: Subtraction, Division                         │
+│                                                              │
+│  [ALL IN-MEMORY DURING SESSION]                              │
+│  - Current question                                          │
+│  - Score counter                                             │
+│  - Timer state                                               │
+│  - Session metadata                                          │
+│  - Operation-specific settings fingerprint                   │
+└──────────────────────┬───────────────────────────────────────┘
+                       │
+                       ↓ (Save on quiz completion)
+┌──────────────────────────────────────────────────────────────┐
+│                LOCAL FILE STORAGE (JSON)                     │
+│                                                              │
+│  📄 best_scores.json                                         │
+│     ├─ Multiplication mode key                               │
+│     └─ Today's best score for that mode                      │
+│                                                              │
+│  📄 sessions.json                                            │
+│     ├─ Shared session metadata                               │
+│     ├─ operation = multiplication | addition                 │
+│     ├─ Scores, timings, and accuracy metrics                 │
+│     └─ Additional operation-specific fields                  │
+│                                                              │
+│  ❌ NO USER DATABASE                                         │
+│  ❌ NO SERVER CONNECTION                                     │
+│  ❌ NO CLOUD STORAGE                                         │
+│  ❌ NO USER TRACKING                                         │
+└──────────────────────────────────────────────────────────────┘
 ```
+- `pages/Addition.py` follows the same session-state driven lifecycle as `pages/Multiplication.py`.
+- Addition writes completed sessions to `sessions.json` with `operation = addition` so Dashboard filters and trend views can include it without a separate storage path.
+- Addition does not require `best_scores.json` for the first implementation; the architecture keeps that file scoped to multiplication unless a future requirement expands daily best tracking.
+- Existing Dashboard data loading remains the aggregation point for cross-operation analytics.
 
 ---
 

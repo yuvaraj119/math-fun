@@ -413,7 +413,7 @@ SO THAT I can practice at my preferred difficulty level
 
 #### Acceptance Criteria
 1. **WHEN** a user selects difficulty level (Beginner/Intermediate/Advanced)  
-   **THE SYSTEM SHALL** update the number range accordingly:
+   **THE SYSTEM SHALL** update the operand range accordingly:
    - Beginner: 1-10
    - Intermediate: 1-50
    - Advanced: 1-100
@@ -425,7 +425,10 @@ SO THAT I can practice at my preferred difficulty level
    **THE SYSTEM SHALL** accept values from 2 to 60 seconds
 
 4. **WHEN** a user clicks "Start"  
-   **THE SYSTEM SHALL** initialize quiz with selected configuration
+   **THE SYSTEM SHALL** initialize the quiz using the selected configuration
+
+5. **WHEN** a user clicks "Stop"  
+   **THE SYSTEM SHALL** reset active Addition quiz state and return to the configuration view
 
 ### 5.2 Question Generation
 #### User Story
@@ -436,30 +439,91 @@ SO THAT I get varied practice
 
 #### Acceptance Criteria
 1. **WHEN** quiz initializes  
-   **THE SYSTEM SHALL** generate total_q unique random addition problems based on selected range
+   **THE SYSTEM SHALL** generate random addition problems using operands from the selected difficulty range
 
-2. **WHEN** quiz runs  
+2. **WHEN** quiz initializes  
+   **THE SYSTEM SHALL** create exactly the configured number of questions
+
+3. **WHEN** quiz runs  
    **THE SYSTEM SHALL** present questions in random order
 
-### 5.3 Answer Validation
+4. **WHEN** the configured number of questions is within the available unique combinations  
+   **THE SYSTEM SHALL** avoid duplicate question pairs within the same session
+
+### 5.3 Live Quiz Display
+#### User Story
+AS A student  
+WHEN I am answering addition questions  
+I WANT to see my progress and time remaining  
+SO THAT I can stay focused and manage my pace
+
+#### Acceptance Criteria
+1. **WHEN** the Addition quiz is running  
+   **THE SYSTEM SHALL** display the current score prominently
+
+2. **WHEN** the Addition quiz is running  
+   **THE SYSTEM SHALL** display the current question number and total questions
+
+3. **WHEN** the Addition quiz is running  
+   **THE SYSTEM SHALL** display the current addition question in a clear, readable format
+
+4. **WHEN** the Addition quiz is running  
+   **THE SYSTEM SHALL** display a visible countdown timer for the current question
+
+5. **WHEN** the Addition quiz is running  
+   **THE SYSTEM SHALL** display a progress indicator based on questions completed
+
+6. **WHEN** the timer reaches 0 seconds  
+   **THE SYSTEM SHALL** automatically record a timeout and advance to the next question
+
+### 5.4 Answer Validation
 #### User Story
 AS A student  
 WHEN I submit an answer to an addition question  
 I WANT immediate feedback on correctness  
-SO THAT I know if I need to study more
+SO THAT I know if I need more practice
 
 #### Acceptance Criteria
 1. **WHEN** a user submits a numeric answer  
-   **THE SYSTEM SHALL** validate it against correct result
+   **THE SYSTEM SHALL** validate it against the correct sum
 
-2. **WHEN** answer is correct  
-   **THE SYSTEM SHALL** increment score counter and show ✅ feedback
+2. **WHEN** a user submits non-numeric input  
+   **THE SYSTEM SHALL** show an invalid-input message indicating that a whole number is required
 
-3. **WHEN** answer is incorrect  
-   **THE SYSTEM SHALL** show correct answer and move to next
+3. **WHEN** a user submits an empty answer  
+   **THE SYSTEM SHALL** treat the submission as invalid input
 
-4. **WHEN** timer expires before answer  
-   **THE SYSTEM SHALL** record as TIMEOUT and advance
+4. **WHEN** answer is correct  
+   **THE SYSTEM SHALL** increment the score, record the elapsed time, show positive feedback, and advance to the next question
+
+5. **WHEN** answer is incorrect  
+   **THE SYSTEM SHALL** record the elapsed time, show the correct answer, and advance to the next question
+
+6. **WHEN** timer expires before answer submission  
+   **THE SYSTEM SHALL** record the question result as TIMEOUT and advance automatically
+
+### 5.5 Results & Persistence
+#### User Story
+AS A student  
+WHEN I complete an addition quiz  
+I WANT to see my results and have the session saved locally  
+SO THAT I can track my improvement over time
+
+#### Acceptance Criteria
+1. **WHEN** the Addition quiz finishes  
+   **THE SYSTEM SHALL** display a final score summary
+
+2. **WHEN** the Addition quiz finishes  
+   **THE SYSTEM SHALL** display accuracy and speed-related metrics for the completed session
+
+3. **WHEN** the Addition quiz finishes  
+   **THE SYSTEM SHALL** save a session row to local JSON storage using a format compatible with Dashboard analytics
+
+4. **WHEN** an Addition session is saved  
+   **THE SYSTEM SHALL** mark the operation type as `addition` so it can be filtered independently in the Dashboard
+
+5. **WHEN** a saved Addition session exists  
+   **THE SYSTEM SHALL** allow the Dashboard to include it in session history tables and trend views
 
 ---
 
@@ -672,8 +736,8 @@ After completing Requirements.md, proceed to **Design.md** to architect the solu
 3. → Design.md - Architect the solution
 4. → Architecture.md - Update system diagrams
 5. → Tasks.md - Break into development tasks
-6. → Implementations.md - Add code examples
-7. → Testing.md - Define test strategy
-8. → README.md - Update documentation
-9. → Release.md - Tag and publish
-
+6. → Implementations.md - Prepare implementation details
+7. → Coding.md - Implement approved source changes and record them
+8. → Testing.md - Define test strategy
+9. → README.md - Update documentation
+10. → Release.md - Tag and publish

@@ -9,8 +9,9 @@ Welcome!
 
 Use the sidebar to navigate:
 - **📊 Dashboard**: Tracks every session from `sessions.json`
-- **✖️ Multiplication**: Multiplication table quiz
+- **✖ Multiplication**: Multiplication table quiz
+- **➕ Addition**: Addition practice quiz
 
-Later we can add Addition, Subtraction, Division as separate pages.
+Later we can add Subtraction and Division as separate pages.
 """
 )
